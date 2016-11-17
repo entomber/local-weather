@@ -1,0 +1,144 @@
+html, body {
+  margin-top: 20px;
+  padding: 0;
+  font-family: 'Open Sans', sans-serif;
+  font-size: 24px;
+  font-weight: bold;
+  /*border: 1px solid gray;*/
+}
+h1 {
+  font-size: 36px;
+}
+#location {
+  margin-top: 20px;
+}
+#content {
+  min-width: 300px;
+  max-width: 600px;
+  margin: 0 auto;
+  text-align: center;
+}
+a {
+  text-decoration: none;
+}
+#module-section {
+  display: inline-block;
+  /*border: 3px dotted red;*/
+}
+.module-container {
+  display: inline-block;
+  height: 200px;
+  width: 200px;
+  vertical-align: middle;
+  margin: 20px 10px 20px 10px;
+  /*border: 10px solid gray;*/
+  border-radius: 2%;
+}
+.module {
+  position: relative;
+  top: 50%;
+  transform: translateY( -50%);
+  /*border: 3px dotted purple;*/
+}
+#wind-direction {
+  position: relative;
+  animation-duration: 5s;
+  animation-iteration-count: infinite;
+  /*border: 3px dotted purple;*/
+}
+#wind-speed {
+  margin-right: -10px;
+}
+#weather-icon {
+  display: block;
+  margin: 0 auto;
+}
+#last-update {
+  font-size: 14px;
+}
+#byline {
+  margin-top: 20px;
+  font-size: 14px;
+}
+@keyframes north {
+  0%, 40% {
+    top: 0px;
+    left: 0px;
+  }
+  100% {
+    top: -30px;
+    left: 0px;
+  }
+}
+@keyframes northeast {
+  0%, 40% {
+    top: 0px;
+    left: -10px;
+  }
+  100% {
+    top: -30px;
+    left: 20px;
+  }
+}
+@keyframes east {
+  0%, 40% {
+    top: 0px;
+    left: -30px;
+  }
+  100% {
+    top: 0px;
+    left: 0px;
+  }
+}
+@keyframes southeast {
+  0%, 40% {
+    top: 0px;
+    left: -10px;
+  }
+  100% {
+    top: 30px;
+    left: 20px;
+  }
+}
+@keyframes south {
+  0%, 40% {
+    top: 0px;
+    left: 0px;
+  }
+  100% {
+    top: 30px;
+    left: 0px;
+  }
+}
+@keyframes southwest {
+  0%, 40% {
+    top: 0px;
+    left: 0px;
+  }
+  100% {
+    top: 30px;
+    left: -30px;
+  }
+}
+@keyframes west {
+  0%, 40% {
+    top: 0px;
+    left: 0px;
+  }
+  100% {
+    top: 0px;
+    left: -30px;
+  }
+}
+
+@keyframes northwest {
+  0%, 40% {
+    top: 0px;
+    left: 0px;
+  }
+
+  100% {
+    top: -30px;
+    left: -30px;
+  }
+}
