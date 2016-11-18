@@ -1,9 +1,9 @@
 (function(global) {
 
   'use strict';
-  const WEATHER_API_KEY = 'e534aa002759960aff20b6b337db8f0b';
+  const WEATHER_API_KEY = '9c131af90334153171c3f715e9228514';
   const LOCATION_URL = 'http://ip-api.com/json';
-  const WEATHER_URL = 'http://api.openweathermap.org/data/2.5/weather?';
+  const WEATHER_URL = 'https://api.darksky.net/forecast';
   const WIND_DIRECTION_MAPPING = {
     N: 'north',
     NE: 'northeast',
@@ -23,7 +23,6 @@
       .catch(function(error) {
         console.error('error: ' + error);
       });
-    // getWeatherCodepen();
   });
 
   /* Return the position of the user as a Promise.
@@ -37,37 +36,13 @@
     });
   }
 
-  /* Workaround for codepen.io because getCurrentPosition requires HTTPS,
-   * and openweathermap's free API is only HTTP. So, to use all HTTP, call
-   * an API to get location.
-   */
-  function getWeatherCodepen() {
-    var jsonObject = {};
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET', LOCATION_URL, true); // true makes this call async
-    xhr.onreadystatechange = function() { // need event handler since our call is async
-      if (xhr.readyState == 4 && xhr.status == 200) { // check for success
-        jsonObject = JSON.parse(xhr.responseText);
-        const LAT = jsonObject.lat;
-        const LON = jsonObject.lon;
-        const URL = WEATHER_URL + 'units=imperial&lat=' + LAT + '&lon=' + LON + '&APPID=' + WEATHER_API_KEY + '&callback=updatePage';
-        console.log(URL);
-
-        var script = document.createElement('script');
-        script.src = URL;
-        document.head.appendChild(script);
-      }
-    };
-    xhr.send(null);
-  }
-
   /* Get the data from weather API.
    * @param {Object} position - position of user
    */
   function getWeather(position) {
     const LAT = Math.round(position.coords.latitude * 1000) / 1000;
     const LON = Math.round(position.coords.longitude * 1000) / 1000;
-    const URL = WEATHER_URL + 'units=imperial&lat=' + LAT + '&lon=' + LON + '&APPID=' + WEATHER_API_KEY + '&callback=updatePage';
+    const URL = `${WEATHER_URL}/${WEATHER_API_KEY}/${LAT},${LON}?exclude=[minutely,hourly]&callback=updatePage`;
     // console.log('Latitude: '+lat+'\nLongitude: '+lon);
     console.log(URL);
 
@@ -82,19 +57,17 @@
    * @param {Object} data - the data from weather API
    */
   var updatePage = global.updatePage = function(data) {
-    const LAT = data.coord.lat;
-    const LON = data.coord.lon;
-    const MAP_URL = 'http://maps.google.com/?output=embed&q=' + LAT + ',' + LON + '&ll=' + LAT + ',' + LON + '&z=13';
-    const CITY = data.name;
-    const COUNTRY = data.sys.country;
-    const DATE = new Date(data.dt * 1000); /* API returns time in seconds since Unix Epoc */
-    const SUNRISE = new Date(data.sys.sunrise * 1000);
-    const SUNSET = new Date(data.sys.sunset * 1000);
-    const TEMPERATURE = data.main.temp;
-    const WEATHER_ID = data.weather[0].id;
-    const WEATHER_DESCRIPTION = data.weather[0].description;
-    const WIND_SPEED = data.wind.speed;
-    const WIND_DIRECTION = data.wind.deg;
+    const LAT = data.latitude;
+    const LON = data.longitude;
+    const MAP_URL = `http://maps.google.com/?output=embed&q=${LAT},${LON}&ll=${LAT},${LON}&z=13`;
+    const DATE = new Date(data.currently.time * 1000); /* API returns time in seconds since Unix Epoc */
+    const SUNRISE = new Date(data.daily.data[0].sunriseTime * 1000);
+    const SUNSET = new Date(data.daily.data[0].sunsetTime * 1000);
+    const TEMPERATURE = data.currently.temperature;
+    const WEATHER_ICON = data.currently.icon;
+    const WEATHER_SUMMARY = data.currently.summary;
+    const WIND_SPEED = data.currently.windSpeed;
+    const WIND_DIRECTION = data.currently.windBearing;
     var elLocation = document.getElementById('location');
     var elTemperature = document.getElementById('temperature');
     var elUnits = document.getElementById('units');
@@ -109,14 +82,9 @@
 
     console.log(data);
 
-    // Display the city and country
-    if (CITY && COUNTRY) {
-      elLocation.setAttribute('href', MAP_URL);
-      elLocation.innerHTML = CITY + ', ' + COUNTRY;
-    } else if (CITY) {
-      elLocation.setAttribute('href', MAP_URL);
-      elLocation.innerHTML = CITY;
-    }
+    // Display the latitude and longitude
+    elLocation.setAttribute('href', MAP_URL);
+    elLocation.innerHTML = LAT + ', ' + LON;
 
     // Set initial temperature to F, set initial units text
     if (TEMPERATURE) {
@@ -136,22 +104,22 @@
     });
 
     // Sets weather icon
-    if (WEATHER_ID) {
-      setWeatherIcon(WEATHER_ID, isDayTime(SUNRISE, SUNSET));
+    if (WEATHER_ICON) {
+      setWeatherIcon(WEATHER_ICON, isDayTime(SUNRISE, SUNSET));
     }
 
     // Display weather condition
-    if (WEATHER_DESCRIPTION) {
-      elWeather.innerHTML = WEATHER_DESCRIPTION;
+    if (WEATHER_SUMMARY) {
+      elWeather.innerHTML = WEATHER_SUMMARY;
       // Centers weather description if weather icon is missing
-      if (!WEATHER_ID) {
+      if (!WEATHER_ICON) {
         elWeatherIcon.style.width = 0;
         elWeatherIcon.style.height = 0;
       }
     }
 
     // Remove weather module if both weather icon and condition are missing
-    if (!WEATHER_ID && !WEATHER_DESCRIPTION) {
+    if (!WEATHER_ICON && !WEATHER_SUMMARY) {
       let elModuleSection = document.getElementById('module-section');
       elModuleSection.removeChild(document.getElementById('weather-module'));
     }
@@ -264,47 +232,54 @@
       && currentTime.toTimeString() <= sunSet.toTimeString();
   }
 
-  /* Sets the weather icon based upon time of day and weather code
-   * received from API.
-   * @param {Number} weatherCode - the weather code according to
-   * http://openweathermap.org/weather-conditions
-   * @param {boolean} isDayTime - true for day, false for night
+  /* Sets the weather icon based upon weather icon received from API.
+   * @param {Number} weatherIcon - the weather icon according to
+   * https://darksky.net/dev/docs/response
    */
-  function setWeatherIcon(weatherCode, isDaytime) {
-    var skycons = skycons = new Skycons({'color': document.body.style.color}),
-      icon = 'weather-icon';
-    if ((weatherCode >= 300 && weatherCode < 500) || weatherCode == 906 ) {
-      skycons.add(icon, Skycons.SLEET);
-      skycons.play();
-    } else if (weatherCode >= 500 && weatherCode <= 504) {
-      skycons.add(icon, Skycons.RAIN);
-      skycons.play();
-    } else if (weatherCode == 511 || (weatherCode >= 600 && weatherCode < 700)) {
-      skycons.add(icon, Skycons.SNOW);
-      skycons.play();
-    } else if (weatherCode >= 700 && weatherCode < 800) {
-      skycons.add(icon, Skycons.FOG);
-      skycons.play();
-    } else if (weatherCode == 800) {
-      if (isDaytime) {
-        skycons.add(icon, Skycons.CLEAR_DAY);   
-      } else {
+  function setWeatherIcon(weatherIcon) {
+    var skycons = new Skycons({'color': document.body.style.color});
+    var icon = 'weather-icon';
+    switch (weatherIcon) {
+      case 'sleet':
+        skycons.add(icon, Skycons.SLEET);
+        skycons.play();
+        break;
+      case 'rain':
+        skycons.add(icon, Skycons.RAIN);
+        skycons.play();
+        break;
+      case 'snow':
+        skycons.add(icon, Skycons.SNOW);
+        skycons.play();
+        break;
+      case 'fog':
+        skycons.add(icon, Skycons.FOG);
+        skycons.play();
+        break;
+      case 'clear-day':
+        skycons.add(icon, Skycons.CLEAR_DAY);
+        skycons.play();
+        break;
+      case 'clear-night':
         skycons.add(icon, Skycons.CLEAR_NIGHT);
-      }
-    skycons.play();
-    } else if (weatherCode >= 801 && weatherCode < 804) {
-      if (isDaytime) {
+        skycons.play();
+        break;
+      case 'partly-cloudy-day':
         skycons.add(icon, Skycons.PARTLY_CLOUDY_DAY);
-      } else {
+        skycons.play();
+        break;
+      case 'partly-cloudy-night':
         skycons.add(icon, Skycons.PARTLY_CLOUDY_NIGHT);
-      }
-    skycons.play();
-    } else if (weatherCode == 803 || weatherCode == 804) {
-      skycons.add(icon, Skycons.CLOUDY);
-      skycons.play();
-    } else if (weatherCode == 905 || (weatherCode >= 952 && weatherCode <= 959)) {
-      skycons.add(icon, Skycons.WIND);
-      skycons.play();
+        skycons.play();
+        break;
+      case 'cloudy':
+        skycons.add(icon, Skycons.CLOUDY);
+        skycons.play();
+        break;
+      case 'wind':
+        skycons.add(icon, Skycons.WIND);
+        skycons.play();
+        break;
     }
   }
 }(window));
