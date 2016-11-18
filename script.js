@@ -153,7 +153,7 @@
    */
   function setBackgroundColor(sunRise, sunSet) {
     if (isDayTime(sunRise, sunSet)) {
-      document.body.style.backgroundColor = '#99E64D';
+      document.body.style.backgroundColor = '#3BCC37';
       document.body.style.color = '#F2F2F2';
       document.getElementById('units').style.color = '#1E3124';
       document.getElementById('location').style.color = '#1E3124';
@@ -161,9 +161,9 @@
     } else {
       document.body.style.backgroundColor = '#1E3124';
       document.body.style.color = '#E8E8E8';
-      document.getElementById('units').style.color = '#99E64D';
-      document.getElementById('location').style.color = '#99E64D';
-      document.getElementById('by').style.color = '#99E64D';
+      document.getElementById('units').style.color = '#3BCC37';
+      document.getElementById('location').style.color = '#3BCC37';
+      document.getElementById('by').style.color = '#3BCC37';
     }
   }
 
