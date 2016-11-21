@@ -56,6 +56,11 @@ a {
 #last-update {
   font-size: 14px;
 }
+#powered-by-darksky img {
+  margin-top: 20px;
+  width: 25%;
+  height: auto;
+}
 #byline {
   margin-top: 20px;
   font-size: 14px;
